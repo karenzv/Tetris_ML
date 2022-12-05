@@ -71,7 +71,7 @@ def set_record(record, score):
     with open('record', 'w') as f:
         f.write(str(rec))
 
-
+#
 while True:
     record = get_record()
     dx, rotate = 0, False
