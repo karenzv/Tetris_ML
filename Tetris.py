@@ -5,7 +5,7 @@ from random import choice, randrange
 W, H = 10, 20
 TILE = 45
 GAME_RES = W * TILE, H * TILE
-RES = 600, 70
+RES = 750, 940
 FPS = 60
 #
 pygame.init()
@@ -32,8 +32,10 @@ anim_count, anim_speed, anim_limit = 0, 60, 2000
 bg = pygame.image.load('img/bg.jpg').convert()
 game_bg = pygame.image.load('img/bg2.jpg').convert()
 
-main_font = pygame.font.Font('font/font.ttf', 65)
-font = pygame.font.Font('font/font.ttf', 45)
+#main_font = pygame.font.Font('fonts/font.ttf', 65)
+main_font = pygame.font.Font('fonts/arcade.ttf', 65)
+#font = pygame.font.Font('fonts/font.ttf', 45)
+font = pygame.font.Font('fonts/mario.ttf', 45)
 
 title_tetris = main_font.render('TETRIS', True, pygame.Color('darkorange'))
 title_score = font.render('score:', True, pygame.Color('green'))
