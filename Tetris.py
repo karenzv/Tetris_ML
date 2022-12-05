@@ -22,19 +22,18 @@ figures_pos = [[(-1, 0), (-2, 0), (0, 0), (1, 0)],
                [(0, 0), (0, -1), (0, 1), (-1, -1)],
                [(0, 0), (0, -1), (0, 1), (1, -1)],
                [(0, 0), (0, -1), (0, 1), (-1, 0)]]
-
+game_sc= pygame.Surface(GAME_RES)
 figures = [[pygame.Rect(x + W // 2, y + 1, 1, 1) for x, y in fig_pos] for fig_pos in figures_pos]
 figure_rect = pygame.Rect(0, 0, TILE - 2, TILE - 2)
 field = [[0 for i in range(W)] for j in range(H)]
 
 anim_count, anim_speed, anim_limit = 0, 60, 2000
 
-bg = pygame.image.load('img/bg.jpg').convert()
-game_bg = pygame.image.load('img/bg2.jpg').convert()
+#bg = pygame.image.load('img/bg.jpg').convert()
+#game_bg = pygame.image.load('img/bg2.jpg').convert()
 
-#main_font = pygame.font.Font('fonts/font.ttf', 65)
+
 main_font = pygame.font.Font('fonts/arcade.ttf', 65)
-#font = pygame.font.Font('fonts/font.ttf', 45)
 font = pygame.font.Font('fonts/mario.ttf', 45)
 
 title_tetris = main_font.render('TETRIS', True, pygame.Color('darkorange'))
@@ -76,9 +75,9 @@ def set_record(record, score):
 while True:
     record = get_record()
     dx, rotate = 0, False
-    sc.blit(bg, (0, 0))
+    sc.fill((0,0,0))
     sc.blit(game_sc, (20, 20))
-    game_sc.blit(game_bg, (0, 0))
+    game_sc.fill((0,0,0))
     # delay for full lines
     for i in range(lines):
         pygame.time.wait(200)
