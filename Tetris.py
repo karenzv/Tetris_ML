@@ -7,7 +7,7 @@ TILE = 45
 GAME_RES = W * TILE, H * TILE
 RES = 600, 70
 FPS = 60
-
+#
 pygame.init()
 sc = pygame.display.set_mode(RES)
 game_sc = pygame.Surface(GAME_RES)
