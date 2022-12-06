@@ -204,13 +204,18 @@ class Tetris:
         return lines
 
     def get_current_state(self):
-         # get board state.
-        column_heights = [-1]*W
+        # get board state.
+        state = [-1]*W
         for lineIndex, line in enumerate(self.board):
             for cellIndex, cell in enumerate(line):
-                if column_heights[cellIndex] == -1 & cell != 0:
-                    column_heights[cellIndex] = H - lineIndex
-        return column_heights, self.figure
+                if state[cellIndex] == -1 & cell != 0:
+                    state[cellIndex] = H - lineIndex
+        # get figure state
+        for coordenate in self.figure:
+            state.append(coordenate[0])
+            state.append(coordenate[1])
+
+        return state
 
     def calculate_score(self,lines):
         self.score += self.scores[lines]
