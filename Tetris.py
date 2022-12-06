@@ -22,7 +22,7 @@ figures_pos = [[(-1, 0), (-2, 0), (0, 0), (1, 0)],
                [(0, 0), (0, -1), (0, 1), (-1, -1)],
                [(0, 0), (0, -1), (0, 1), (1, -1)],
                [(0, 0), (0, -1), (0, 1), (-1, 0)]]
-game_sc= pygame.Surface(GAME_RES)
+#game_sc= pygame.Surface(GAME_RES)
 figures = [[pygame.Rect(x + W // 2, y + 1, 1, 1) for x, y in fig_pos] for fig_pos in figures_pos]
 figure_rect = pygame.Rect(0, 0, TILE - 2, TILE - 2)
 field = [[0 for i in range(W)] for j in range(H)]
@@ -71,7 +71,7 @@ def set_record(record, score):
     with open('record', 'w') as f:
         f.write(str(rec))
 
-#
+
 while True:
     record = get_record()
     dx, rotate = 0, False
@@ -102,6 +102,7 @@ while True:
             figure = deepcopy(figure_old)
             break
     # move y
+    
     anim_count += anim_speed
     if anim_count > anim_limit:
         anim_count = 0
@@ -110,11 +111,16 @@ while True:
             figure[i].y += 1
             if not check_borders():
                 for i in range(4):
+                    print(i,"****")
+                    print(figure_old)
+                    print(figure_old[i].y)
+                    print(figure_old[i].x)
                     field[figure_old[i].y][figure_old[i].x] = color
                 figure, color = next_figure, next_color
                 next_figure, next_color = deepcopy(choice(figures)), get_color()
                 anim_limit = 2000
                 break
+    
     # rotate
     center = figure[0]
     figure_old = deepcopy(figure)
