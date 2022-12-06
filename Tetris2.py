@@ -1,7 +1,9 @@
 import pygame
 import enum
+import sys
 from copy import deepcopy
-from random import choice, randrange
+from random import choice, randrange, random
+from QNN import QLearningNeuralNetwork
 
 # Tetris related
 W, H = 10, 20
@@ -22,12 +24,13 @@ GAMMA = 0 # discount
 EPS_GREEDY = 0
 ETA_DECAY = 0
 
+RANDOM_SEED = 2
+
 class Action(enum.IntEnum):
     LEFT = 0
     RIGHT = 1
     DOWN = 2
     ROTATE = 4
-
 
 class Agent():
     def __init__(self,memory_capacity, batch_size, iters, learning_rate, discount, eps_greedy, decay):
@@ -43,7 +46,7 @@ class Agent():
         self.discount = discount # gamma
         self.eps = eps_greedy
         self.decay = decay
-        #self.model = QNN(3,6,4)
+        self.model = QLearningNeuralNetwork()
         #self.my_trainer = QTrainer(self.model,self.learning,self.discount)
 
     def train(self):#?
@@ -138,7 +141,9 @@ class Tetris:
     def controls(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                exit()
+                pygame.display.quit()
+                pygame.quit()
+                sys.exit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
                     dx = -1
