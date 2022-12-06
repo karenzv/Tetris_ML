@@ -25,6 +25,7 @@ EPS_GREEDY = 0
 ETA_DECAY = 0
 
 RANDOM_SEED = 2
+EPOCHS = 3
 
 class Action(enum.IntEnum):
     LEFT = 0
@@ -59,8 +60,12 @@ class Agent():
         print("simulation")
         tetris.reset()
         print("Dspues de reset")
-        while not tetris.is_game_over():
-            self.step(tetris)
+        epoch = 0
+        while epoch < EPOCHS:
+            while not tetris.is_game_over():
+                self.step(tetris)
+            epoch += 1
+        
 
     def step(self,env,learn=True):
         print("step")
@@ -246,8 +251,10 @@ class Tetris:
         # controls
         #self.controls
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                exit()
+            if event.type == pygame.QUIT:   
+                pygame.display.quit()
+                pygame.quit()
+                sys.exit()
             '''if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
                     dx = -1
