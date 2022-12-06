@@ -3,7 +3,7 @@ import enum
 import sys
 from copy import deepcopy
 from random import choice, randrange, random
-from QNN import QLearningNeuralNetwork
+#from QNN import QLearningNeuralNetwork
 
 # Tetris related
 W, H = 10, 20
@@ -28,14 +28,15 @@ RANDOM_SEED = 2
 
 class Action(enum.IntEnum):
     LEFT = 0
-    RIGHT = 1
-    DOWN = 2
-    ROTATE = 4
+    RIGHT = 1    
+    ROTATE = 2
+    #DOWN = 3
 
 class Agent():
     def __init__(self,memory_capacity, batch_size, iters, learning_rate, discount, eps_greedy, decay):
-        self.prng = random.Random()
-        self.prng.seed(RANDOM_SEED)
+        #random.seed(RANDOM_SEED)
+        self.prng = random()
+        #self.prng.seed(RANDOM_SEED)
         self.max_memory = memory_capacity
         self.memory = []
         # Batch size for each training
@@ -46,7 +47,7 @@ class Agent():
         self.discount = discount # gamma
         self.eps = eps_greedy
         self.decay = decay
-        self.model = QLearningNeuralNetwork()
+        #self.model = QLearningNeuralNetwork()
         #self.my_trainer = QTrainer(self.model,self.learning,self.discount)
 
     def train(self):#?
@@ -55,27 +56,34 @@ class Agent():
         pass
 
     def simulation(self,tetris):
+        print("simulation")
         tetris.reset()
-        while not tetris.is_game_over:
+        print("Dspues de reset")
+        while not tetris.is_game_over():
             self.step(tetris)
 
     def step(self,env,learn=True):
+        print("step")
         reward = 0
         action = None
-        rand = self.prng.random()  
-        
+        #rand = self.prng.random()  
+        rand = random()
+        rand = 0.20
+        learn = True
         if rand > self.eps or learn==False:
             # Best known action
             old_state = env.get_state()
+            '''
             state = torch.tensor(old_state, dtype=torch.float)
             pred = self.model(state)
             action = torch.argmax(pred).item()            
             reward,new_state = env.perform_action(action)            
-            self.train_memory(old_state, action, reward, new_state)            
+            self.train_memory(old_state, action, reward, new_state)'''            
         elif learn and rand < self.eps:
             # Random action
-            action = int(self.prng.random()*4)
-            reward,new_state = env.perform_action(action)
+            action = int(random()*4)
+            #reward,new_state = env.perform_action(action)
+            env.perform_action(action)
 class Tetris:
 
     grid = [pygame.Rect(x * TILE, y * TILE, TILE, TILE) for x in range(W) for y in range(H)]
@@ -106,13 +114,14 @@ class Tetris:
         self.game_screen = pygame.Surface(GAME_RES)
         self.clock = pygame.time.Clock()
         self.board = [[0 for i in range(W)] for j in range(H)]
-        print(len(self.board))
         self.score, self.lines = 0, 0    
+        self.record =0
         self.main_font = pygame.font.Font('fonts/arcade.ttf', 65)
         self.font = pygame.font.Font('fonts/mario.ttf', 45)
         self.title_tetris = self.main_font.render('TETRIS', True, pygame.Color('darkorange'))
         self.title_score = self.font.render('score:', True, pygame.Color('green'))
         self.title_record = self.font.render('record:', True, pygame.Color('purple'))
+        print("Tetris creado")
 
     def get_color(self):
         return lambda : (randrange(30, 256), randrange(30, 256), randrange(30, 256))
@@ -137,22 +146,6 @@ class Tetris:
         rec = max(int(record), score)
         with open('record', 'w') as f:
             f.write(str(rec))
-
-    def controls(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.display.quit()
-                pygame.quit()
-                sys.exit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    dx = -1
-                elif event.key == pygame.K_RIGHT:
-                    dx = 1
-                elif event.key == pygame.K_DOWN:
-                    anim_limit = 100
-                elif event.key == pygame.K_UP:
-                    rotate = True
 
     def move_horizontally(self,dx):
         figure_old = deepcopy(self.figure)
@@ -217,85 +210,118 @@ class Tetris:
     def calculate_score(self,lines):
         self.score += self.scores[lines]
 
-    def is_game_over(self,record):
+    def is_game_over(self):
+        print("game_over")
+        game_over = False
         for i in range(W):
             if self.board[0][i]:
-                self.set_record(record, self.score)
+                self.set_record(self.record, self.score)
                 self.reset()
+                game_over= True
                 for i_rect in self.grid:
                     # TODO: stop this from redrawing
                     pygame.draw.rect(self.game_screen, (181,59,183), i_rect)
                     self.screen.blit(self.game_screen, (20, 20))
                     pygame.display.flip()
                     self.clock.tick(200)
+        return game_over
                     
     def reset(self):
+        print("reset")
         self.board = [[0 for i in range(W)] for i in range(H)]
         self.anim_count, self.anim_speed, self.anim_limit = 0, 60, 2000
         self.score = 0
 
-    def run(self):
-        while True:
-            record = self.get_record()
-            dx, rotate = 0, False
-            self.screen.fill((0,0,0))
-            self.screen.blit(self.game_screen, (20, 20))
-            self.game_screen.fill((0,0,0))
-            # delay for full lines
-            for i in range(self.lines):
-                pygame.time.wait(200)
-            # controls
-            #self.controls
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    exit()
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_LEFT:
-                        dx = -1
-                    elif event.key == pygame.K_RIGHT:
-                        dx = 1
-                    elif event.key == pygame.K_DOWN:
-                        self.anim_limit = 100
-                    elif event.key == pygame.K_UP:
-                        rotate = True
-            #self.move_horizontally(dx)
-            self.move_horizontally(dx)
+    def perform_action(self,action):
+        print("Perform action")
+        #while True:
+        record = self.get_record()
+        dx, rotate = 0, False
+        self.screen.fill((0,0,0))
+        self.screen.blit(self.game_screen, (20, 20))
+        self.game_screen.fill((0,0,0))
+        # delay for full lines
+        for i in range(self.lines):
+            pygame.time.wait(200)
+        # controls
+        #self.controls
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                exit()
+            '''if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    dx = -1
+                elif event.key == pygame.K_RIGHT:
+                    dx = 1
+                elif event.key == pygame.K_DOWN:
+                    self.anim_limit = 100
+                elif event.key == pygame.K_UP:
+                    rotate = True'''
 
-            # Vertically
-            self.move_vertically()
-            # rotate
-            self.rotate(rotate)
-            lines = self.check_lines()
-            # compute score
-            self.calculate_score(lines)
-            # draw grid
-            [pygame.draw.rect(self.game_screen, (40, 40, 40), i_rect, 1) for i_rect in self.grid]
-            # draw figure
-            for i in range(4):
-                self.figure_rect.x = self.figure[i].x * TILE
-                self.figure_rect.y = self.figure[i].y * TILE
-                pygame.draw.rect(self.game_screen, (181,59,183), self.figure_rect)
-            # draw field
-            for y, raw in enumerate(self.board):
-                for x, col in enumerate(raw):
-                    if col:
-                        self.figure_rect.x, self.figure_rect.y = x * TILE, y * TILE
-                        pygame.draw.rect(self.game_screen, (181,59,183), self.figure_rect)
-            # draw next figure
-            for i in range(4):
-                self.figure_rect.x = self.next_figure[i].x * TILE + 380
-                self.figure_rect.y = self.next_figure[i].y * TILE + 185
-                pygame.draw.rect(self.screen, (181,59,183), self.figure_rect)
-            # draw titles
-            self.screen.blit(self.title_tetris, (485, -10))
-            self.screen.blit(self.title_score, (535, 780))
-            self.screen.blit(self.font.render(str(self.score), True, pygame.Color('white')), (550, 840))
-            self.screen.blit(self.title_record, (525, 650))
-            self.screen.blit(self.font.render(record, True, pygame.Color('gold')), (550, 710))
-            # game over
-            self.is_game_over(record)
-            pygame.display.flip()
-            self.clock.tick(FPS)
+        if action == 0:
+            dx=-1
+        elif action == 1:
+            dx = 1
+        elif action ==2:
+            rotate = True
+        elif action == 3:
+            self.anim_limit = 100
+        #self.move_horizontally(dx)
+        self.move_horizontally(dx)
 
-tetris = Tetris()
-tetris.run()
+        # Vertically
+        self.move_vertically()
+        # rotate
+        self.rotate(rotate)
+        lines = self.check_lines()
+        # compute score
+        self.calculate_score(lines)
+        # draw grid
+        [pygame.draw.rect(self.game_screen, (40, 40, 40), i_rect, 1) for i_rect in self.grid]
+        # draw figure
+        for i in range(4):
+            self.figure_rect.x = self.figure[i].x * TILE
+            self.figure_rect.y = self.figure[i].y * TILE
+            pygame.draw.rect(self.game_screen, (181,59,183), self.figure_rect)
+        # draw field
+        for y, raw in enumerate(self.board):
+            for x, col in enumerate(raw):
+                if col:
+                    self.figure_rect.x, self.figure_rect.y = x * TILE, y * TILE
+                    pygame.draw.rect(self.game_screen, (181,59,183), self.figure_rect)
+        # draw next figure
+        for i in range(4):
+            self.figure_rect.x = self.next_figure[i].x * TILE + 380
+            self.figure_rect.y = self.next_figure[i].y * TILE + 185
+            pygame.draw.rect(self.screen, (181,59,183), self.figure_rect)
+        # draw titles
+        self.screen.blit(self.title_tetris, (485, -10))
+        self.screen.blit(self.title_score, (535, 780))
+        self.screen.blit(self.font.render(str(self.score), True, pygame.Color('white')), (550, 840))
+        self.screen.blit(self.title_record, (525, 650))
+        self.screen.blit(self.font.render(record, True, pygame.Color('gold')), (550, 710))
+        # game over
+        #self.is_game_over()
+        pygame.display.flip()
+        self.clock.tick(FPS)
+
+class Game:
+    def __init__(self):
+        self.memory_capacity = 10000
+        self.batch_size = 1000
+        self.iters = 10
+        self.lr = 0.001
+        self.discount = 0.25
+        self.greedy = 0.25
+        self.decay = 1e-7
+        self.tetris = Tetris()
+        self.agent = Agent(self.memory_capacity,self.batch_size,self.iters,self.lr,self.discount,self.greedy,self.decay)
+
+    def play(self):
+        self.agent.simulation(self.tetris)
+        
+
+if __name__ == "__main__":
+    game = Game()
+    game.play()
+    
