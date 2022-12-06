@@ -1,13 +1,78 @@
 import pygame
+import enum
 from copy import deepcopy
 from random import choice, randrange
 
+# Tetris related
 W, H = 10, 20
-TILE = 45
+TILE = 35
 GAME_RES = W * TILE, H * TILE
 RES = 750, 940
 FPS = 60
 
+# Rewards
+RECORD_REWARD = 100
+LINE_REWARD = 50
+LOWER_ROWS = 10
+FIGURE_REWARD = 0
+
+# Learning parameters
+LR = 0 # learning rate
+GAMMA = 0 # discount
+EPS_GREEDY = 0
+ETA_DECAY = 0
+
+class Action(enum.IntEnum):
+    LEFT = 0
+    RIGHT = 1
+    DOWN = 2
+    ROTATE = 4
+
+
+class Agent():
+    def __init__(self,memory_capacity, batch_size, iters, learning_rate, discount, eps_greedy, decay):
+        self.prng = random.Random()
+        self.prng.seed(RANDOM_SEED)
+        self.max_memory = memory_capacity
+        self.memory = []
+        # Batch size for each training
+        self.batch_size = batch_size
+        # Number of training sessions before weigths NN update 
+        self.iters = iters
+        self.learning = learning_rate
+        self.discount = discount # gamma
+        self.eps = eps_greedy
+        self.decay = decay
+        #self.model = QNN(3,6,4)
+        #self.my_trainer = QTrainer(self.model,self.learning,self.discount)
+
+    def train(self):#?
+        '''self.my_trainer.train(state,action,reward,next_state)
+        self.memory.append((state, action, reward, next_state))'''
+        pass
+
+    def simulation(self,tetris):
+        tetris.reset()
+        while not tetris.is_game_over:
+            self.step(tetris)
+
+    def step(self,env,learn=True):
+        reward = 0
+        action = None
+        rand = self.prng.random()  
+        
+        if rand > self.eps or learn==False:
+            # Best known action
+            old_state = env.get_state()
+            state = torch.tensor(old_state, dtype=torch.float)
+            pred = self.model(state)
+            action = torch.argmax(pred).item()            
+            reward,new_state = env.perform_action(action)            
+            self.train_memory(old_state, action, reward, new_state)            
+        elif learn and rand < self.eps:
+            # Random action
+            action = int(self.prng.random()*4)
+            reward,new_state = env.perform_action(action)
 class Tetris:
 
     grid = [pygame.Rect(x * TILE, y * TILE, TILE, TILE) for x in range(W) for y in range(H)]
@@ -38,6 +103,7 @@ class Tetris:
         self.game_screen = pygame.Surface(GAME_RES)
         self.clock = pygame.time.Clock()
         self.board = [[0 for i in range(W)] for j in range(H)]
+        print(len(self.board))
         self.score, self.lines = 0, 0    
         self.main_font = pygame.font.Font('fonts/arcade.ttf', 65)
         self.font = pygame.font.Font('fonts/mario.ttf', 45)
@@ -134,6 +200,15 @@ class Tetris:
                 lines += 1
         return lines
 
+    def get_current_state(self):
+         # get board state.
+        column_heights = [-1]*W
+        for lineIndex, line in enumerate(self.board):
+            for cellIndex, cell in enumerate(line):
+                if column_heights[cellIndex] == -1 & cell != 0:
+                    column_heights[cellIndex] = H - lineIndex
+        return column_heights, self.figure
+
     def calculate_score(self,lines):
         self.score += self.scores[lines]
 
@@ -141,14 +216,18 @@ class Tetris:
         for i in range(W):
             if self.board[0][i]:
                 self.set_record(record, self.score)
-                self.board = [[0 for i in range(W)] for i in range(H)]
-                self.anim_count, self.anim_speed, self.anim_limit = 0, 60, 2000
-                self.score = 0
+                self.reset()
                 for i_rect in self.grid:
+                    # TODO: stop this from redrawing
                     pygame.draw.rect(self.game_screen, (181,59,183), i_rect)
                     self.screen.blit(self.game_screen, (20, 20))
                     pygame.display.flip()
                     self.clock.tick(200)
+                    
+    def reset(self):
+        self.board = [[0 for i in range(W)] for i in range(H)]
+        self.anim_count, self.anim_speed, self.anim_limit = 0, 60, 2000
+        self.score = 0
 
     def run(self):
         while True:
