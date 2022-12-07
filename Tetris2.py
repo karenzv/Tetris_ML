@@ -26,6 +26,15 @@ RES = 750, 940
 FPS = 60
 
 # Rewards
+'''
+Idea: Tenemos varias opciones de reconocimiento de puntos para el agente, una propuesta, por ejemplo,
+consistía en calcular la desviación estándar entre las alturas máximas de cada columna para así poder
+premiar más cuando la altura se mantenía lo más baja y pareja (para completar filas) posible, la otra
+propuesta (la que finalmente utilizamos) consiste en otorgar puntos por acciones concretas, como la de
+colocar una pieza en una altura menor a la tercera parte del mapa, y quitar puntos por colocar piezas
+a una altura mayor a un dos tercios del mapa. Siempre se supo que se asignarían y eliminarían puntos
+por completar lineas o perder el juego.
+'''
 # RECORD_REWARD = 100
 LINE_REWARD = 50
 LOWER_ROWS_REWARD = 10
@@ -228,7 +237,7 @@ class Tetris:
                 [(0, 0), (0, -1), (0, 1), (-1, 0)]]
     figures = [[pygame.Rect(x + W // 2, y + 1, 1, 1) for x, y in fig_pos] for fig_pos in figures_pos]
     figure_rect = pygame.Rect(0, 0, TILE - 2, TILE - 2)
-    anim_count, anim_speed, anim_limit = 0, 300, 2000
+    anim_count, anim_speed, anim_limit = 0, 400, 2000
     
 
     get_color = lambda : (randrange(30, 256), randrange(30, 256), randrange(30, 256))
@@ -371,7 +380,7 @@ class Tetris:
                     
     def reset(self):
         self.board = [[0 for i in range(W)] for i in range(H)]
-        self.anim_count, self.anim_speed, self.anim_limit = 0, 300, 2000
+        self.anim_count, self.anim_speed, self.anim_limit = 0, 400, 2000
         self.score = 0
 
     def perform_action(self,action):
