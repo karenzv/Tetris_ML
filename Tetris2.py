@@ -23,7 +23,7 @@ Useful References (Some ideas where adapted from a couple of these):
 W, H = 10, 20
 TILE = 35
 GAME_RES = W * TILE, H * TILE
-RES = 750, 940
+RES = 750, 750
 FPS = 60
 
 # Rewards
@@ -248,7 +248,6 @@ class Tetris:
     color, next_color = get_color(), get_color()
 
     score, lines = 0, 0
-    scores = {0: 0, 1: 100, 2: 300, 3: 700, 4: 1500}
 
     def __init__(self):
         pygame.init()
@@ -260,9 +259,9 @@ class Tetris:
         self.record =0
         self.main_font = pygame.font.Font('fonts/arcade.ttf', 65)
         self.font = pygame.font.Font('fonts/mario.ttf', 45)
-        self.title_tetris = self.main_font.render('TETRIS', True, pygame.Color('darkorange'))
-        self.title_score = self.font.render('score:', True, pygame.Color('green'))
-        self.title_record = self.font.render('record:', True, pygame.Color('purple'))
+        self.title_tetris = self.main_font.render('TETRIS', True, pygame.Color('crimson'))
+        self.title_score = self.font.render('score:', True, pygame.Color('firebrick'))
+        self.title_record = self.font.render('record:', True, pygame.Color('darkred'))
         self.figure_land  = False
 
     def get_color(self):
@@ -381,31 +380,21 @@ class Tetris:
 
     def perform_action(self,action):
         reward = 0
-        #while True:
         record = self.get_record()
         dx, rotate = 0, False
         self.screen.fill((0,0,0))
         self.screen.blit(self.game_screen, (20, 20))
         self.game_screen.fill((0,0,0))
-        # delay for full lines
+        
+        # full line animation
         for i in range(self.lines):
             pygame.time.wait(200)
-        # controls
-        #self.controls
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:   
                 pygame.display.quit()
                 pygame.quit()
                 sys.exit()
-            '''if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    dx = -1
-                elif event.key == pygame.K_RIGHT:
-                    dx = 1
-                elif event.key == pygame.K_DOWN:
-                    self.animsations_limit = 100
-                elif event.key == pygame.K_UP:
-                    rotate = True'''
 
         if action == 0:
             dx=-1
@@ -445,10 +434,10 @@ class Tetris:
             pygame.draw.rect(self.screen, (181,59,183), self.figure_rect)
         # draw titles
         self.screen.blit(self.title_tetris, (485, -10))
-        self.screen.blit(self.title_score, (535, 780))
-        self.screen.blit(self.font.render(str(self.score), True, pygame.Color('white')), (550, 840))
-        self.screen.blit(self.title_record, (525, 650))
-        self.screen.blit(self.font.render(record, True, pygame.Color('gold')), (550, 710))
+        self.screen.blit(self.title_score, (535, 650))
+        self.screen.blit(self.font.render(str(self.score), True, pygame.Color('white')), (550, 690))
+        self.screen.blit(self.title_record, (525, 550))
+        self.screen.blit(self.font.render(record, True, pygame.Color('white')), (550, 590))
         # game over
         #self.is_game_over()
         pygame.display.flip()
