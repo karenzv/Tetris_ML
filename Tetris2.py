@@ -1,9 +1,21 @@
 import pygame
 import enum
 import sys
+import torch
 from copy import deepcopy
 from random import choice, randrange, random
-#from QNN import QLearningNeuralNetwork
+from QNN import QLearningNeuralNetwork
+'''
+Authors: Karen Zamora, Josef Ruzicka
+         B37741      , B87095
+         
+Useful References (Some ideas where adapted from a couple of these):
+    https://openreview.net/pdf?id=8TLyqLGQ7Tg
+    https://medium.com/analytics-vidhya/introduction-to-reinforcement-learning-q-learning-by-maze-solving-example-c34039019317
+    https://www.youtube.com/watch?v=PJl4iabBEz0
+    https://www.youtube.com/watch?v=z4OomBu6kD0
+'''
+
 
 # Tetris related
 W, H = 10, 20
@@ -19,10 +31,10 @@ LOWER_ROWS = 10
 FIGURE_REWARD = 0
 
 # Learning parameters
-LR = 0 # learning rate
-GAMMA = 0 # discount
-EPS_GREEDY = 0
-ETA_DECAY = 0
+DEFAULT_ALPHA_LR = 0.03 # learning rate
+DEFAULT_GAMMA_DISCOUNT = 0.3 # discount
+DEFAULT_EPS_GREEDY  = 1
+DEFAULT_ETA_DECAY  = 0.001
 
 RANDOM_SEED = 2
 EPOCHS = 3
@@ -34,6 +46,100 @@ class Action(enum.IntEnum):
     #DOWN = 3
 
 class Agent():
+    # Initializes the agent
+    def __init__(self,seed,state_dims,actions,learning_rate,discount_factor,eps_greedy,decay):
+        # Use self.prng any time you require to call a random funcion
+        self.prng = random.Random()
+        self.prng.seed(seed)
+        #self.state_dims = state_dims
+        self.actions = actions
+        self.learning_rate = learning_rate
+        self.discount_factor = discount_factor
+        self.eps_greedy = eps_greedy
+        self.decay = decay
+        
+        '''
+        Explicación: nuestro programa se basa en recompenzar la colocación de piezas
+        a la menor altura posible, entonces nuestros estados consisten en un arreglo 
+        con las 10 alturas máximas de cada columna, pero hacer todas las combinaciones
+        posibles de alturas de cada columnas requeriría demasiada memoria: 
+            10 columnas, y valores entre 0 y 20 para cada una representando su altura
+        por lo tanto ignoraremos el eje x, y nuestra tabla solo se tratará de dónde estamos
+        en el eje y, recompenzando solo basado en altura (también habrá recompenzas por
+        eliminación de filas y castigos por perder el juego).
+        '''
+        #qtable as tensor [height0[L,R,Rotate], height1[L,R,Rotate], ..., height19[L,R,Rotate]]
+        self.qtable = []
+        for col in range(H):
+            current_height = []
+            for a in actions:
+                # note: 0:Left, 1:Right, 2:Rotate
+                current_height.append(0)
+            self.qtable.append(current_height)
+        #print(self.qtable)
+        pass
+    
+    # Performs a complete simulation by the agent
+    def simulation(self, env):
+        env.reset()
+        while (not env.is_terminal_state()):
+            self.step(env, learn=True)
+        self.eps_greedy -= self.eps_greedy * self.decay 
+        pass
+    
+    # Performs a single step of the simulation by the agent, if learn=False no updates are performed
+    def step(self, env, learn=True):
+        #print(self.eps_greedy)
+        #Exploration mode
+        r_mode = self.prng.random()
+        #print('r', r_mode)
+        # TODO: sometimes this if wont work properly
+        if (learn and (r_mode < self.eps_greedy)):
+            action_value = self.prng.random() * 3
+            #print('exploring')
+            if ( action_value < 1):
+                a = 0
+            elif ( action_value < 2):
+                a = 1
+            elif ( action_value < 3):
+                a = 2
+            #print('a', a)
+            
+            # Q function = Q(s,a) = R(T(s,a)) + γ · maxa’ Q(T(s,a),a’)
+            # Q(s,a) ← Q(s,a) + α(R(T(s,a)) + γ maxa’ Q(T(s,a),a’) − Q(s,a))
+            
+            '''
+                Get max col height: 
+                (get state, take first 10 values which correspond to col heights, select highest value and use it as qtable index)
+            '''
+            state = env.get_current_state()
+            max_height = max(state[:10])
+            
+            QSA  = self.qtable[max_height][a]
+            #RTSA = env.perform_action(a)[a]
+            #maxa = self.qtable[env.position[0]][env.position[1]].index(max(self.qtable[env.position[0]][env.position[1]]))
+            #QRSA = env.perform_action(maxa)[0]
+                
+            #QSA = QSA + DEFAULT_ALPHA_LR *   (RTSA + DEFAULT_GAMMA_DISCOUNT * QTSA - QSA)
+            self.qtable[max_height][a] +=\
+            DEFAULT_ALPHA_LR *(\
+            env.perform_action(a)[0] +\
+            DEFAULT_GAMMA_DISCOUNT *\
+            max(self.qtable[max_height]) -\
+            QSA)
+            
+        # exploitation mode
+        else:
+            #print('exploitation')
+            best_known_action = self.qtable[max_height].index(max(self.qtable[max_height]))
+            env.perform_action(best_known_action)
+        #print(self.qtable)
+        pass
+
+'''
+# Attempt at solving the problem using Deep Q Learning.
+# There was some confusion towards connecting the NN to the agent and the game.
+class Deep_Q_Learning_Agent():
     def __init__(self,memory_capacity, batch_size, iters, learning_rate, discount, eps_greedy, decay):
         #random.seed(RANDOM_SEED)
         self.prng = random()
@@ -52,10 +158,12 @@ class Agent():
         #self.my_trainer = QTrainer(self.model,self.learning,self.discount)
 
     def train(self):#?
-        '''self.my_trainer.train(state,action,reward,next_state)
+    '''
+'''
+        self.my_trainer.train(state,action,reward,next_state)
         self.memory.append((state, action, reward, next_state))'''
-        pass
-
+        #pass
+'''
     def simulation(self,tetris):
         print("simulation")
         tetris.reset()
@@ -78,17 +186,23 @@ class Agent():
         if rand > self.eps or learn==False:
             # Best known action
             old_state = env.get_state()
+            state = torch.FloatTensor(old_state)
+            pred = self.model(state)
             '''
+'''
             state = torch.tensor(old_state, dtype=torch.float)
+            
             pred = self.model(state)
             action = torch.argmax(pred).item()            
             reward,new_state = env.perform_action(action)            
             self.train_memory(old_state, action, reward, new_state)'''            
+'''
         elif learn and rand < self.eps:
             # Random action
             action = int(random()*4)
             #reward,new_state = env.perform_action(action)
             env.perform_action(action)
+            '''
 class Tetris:
 
     grid = [pygame.Rect(x * TILE, y * TILE, TILE, TILE) for x in range(W) for y in range(H)]
@@ -204,7 +318,7 @@ class Tetris:
         return lines
 
     def get_current_state(self):
-        # get board state.
+        # get board state. returns the height of each column.
         state = [-1]*W
         for lineIndex, line in enumerate(self.board):
             for cellIndex, cell in enumerate(line):
