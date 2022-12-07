@@ -146,7 +146,10 @@ while True:
         else:
             anim_speed += 3
             lines += 1
+
+    print("lines =",lines)
     # compute score
+    print("scores= ",scores[lines])
     score += scores[lines]
     # draw grid
     [pygame.draw.rect(game_sc, (40, 40, 40), i_rect, 1) for i_rect in grid]
