@@ -15,8 +15,9 @@ FPS = 60
 # Rewards
 RECORD_REWARD = 100
 LINE_REWARD = 50
-LOWER_ROWS = 10
-FIGURE_REWARD = 0
+LOWER_ROWS_REWARD = 10
+MIDDLE_ROWS_REWARD = 0
+UPPER_ROWS_REWARD = -10
 
 # Learning parameters
 LR = 0 # learning rate
@@ -57,9 +58,7 @@ class Agent():
         pass
 
     def simulation(self,tetris):
-        print("simulation")
         tetris.reset()
-        print("Dspues de reset")
         epoch = 0
         while epoch < EPOCHS:
             while not tetris.is_game_over():
@@ -68,7 +67,6 @@ class Agent():
         
 
     def step(self,env,learn=True):
-        print("step")
         reward = 0
         action = None
         #rand = self.prng.random()  
@@ -86,7 +84,7 @@ class Agent():
             self.train_memory(old_state, action, reward, new_state)'''            
         elif learn and rand < self.eps:
             # Random action
-            action = int(random()*4)
+            action = int(random()*3)
             #reward,new_state = env.perform_action(action)
             env.perform_action(action)
 class Tetris:
@@ -126,7 +124,7 @@ class Tetris:
         self.title_tetris = self.main_font.render('TETRIS', True, pygame.Color('darkorange'))
         self.title_score = self.font.render('score:', True, pygame.Color('green'))
         self.title_record = self.font.render('record:', True, pygame.Color('purple'))
-        print("Tetris creado")
+        self.figure_land  = False
 
     def get_color(self):
         return lambda : (randrange(30, 256), randrange(30, 256), randrange(30, 256))
@@ -149,6 +147,8 @@ class Tetris:
 
     def set_record(self,record, score):
         rec = max(int(record), score)
+        print("rec = ",int(record)," score= ",score)
+        print("rec= ",rec)
         with open('record', 'w') as f:
             f.write(str(rec))
 
@@ -161,6 +161,7 @@ class Tetris:
                 break
 
     def move_vertically(self):
+        self.figure_land = False
         self.anim_count += self.anim_speed
         if self.anim_count > self.anim_limit:
             self.anim_count = 0
@@ -171,6 +172,7 @@ class Tetris:
                     for i in range(4):
                         self.board[figure_old[i].y][figure_old[i].x] = self.color
                     self.figure, self.color = self.next_figure, self.next_color
+                    self.figure_land = True
                     self.next_figure, self.next_color = deepcopy(choice(self.figures)), self.get_color()
                     self.anim_limit = 2000
                     break
@@ -203,12 +205,19 @@ class Tetris:
                 lines += 1
         return lines
 
+    def calculate_figure_position_reward(self, state):
+        highest_row = 0
+        for i in range(9):
+            if state[i]>highest_row:
+                highest_row= state[i]
+        return highest_row
+
     def get_current_state(self):
         # get board state.
         state = [-1]*W
         for lineIndex, line in enumerate(self.board):
             for cellIndex, cell in enumerate(line):
-                if state[cellIndex] == -1 & cell != 0:
+                if state[cellIndex] == -1 and cell != 0:
                     state[cellIndex] = H - lineIndex
         # get figure state
         for coordenate in self.figure:
@@ -217,11 +226,7 @@ class Tetris:
 
         return state
 
-    def calculate_score(self,lines):
-        self.score += self.scores[lines]
-
     def is_game_over(self):
-        print("game_over")
         game_over = False
         for i in range(W):
             if self.board[0][i]:
@@ -237,13 +242,12 @@ class Tetris:
         return game_over
                     
     def reset(self):
-        print("reset")
         self.board = [[0 for i in range(W)] for i in range(H)]
         self.anim_count, self.anim_speed, self.anim_limit = 0, 60, 2000
         self.score = 0
 
     def perform_action(self,action):
-        print("Perform action")
+        reward = 0
         #while True:
         record = self.get_record()
         dx, rotate = 0, False
@@ -286,8 +290,8 @@ class Tetris:
         # rotate
         self.rotate(rotate)
         lines = self.check_lines()
-        # compute score
-        self.calculate_score(lines)
+        if lines > 0:
+            reward += LINE_REWARD        
         # draw grid
         [pygame.draw.rect(self.game_screen, (40, 40, 40), i_rect, 1) for i_rect in self.grid]
         # draw figure
@@ -316,6 +320,22 @@ class Tetris:
         #self.is_game_over()
         pygame.display.flip()
         self.clock.tick(FPS)
+        next_state = self.get_current_state()
+        if self.figure_land:
+            highest_row = self.calculate_figure_position_reward(next_state)            
+            if highest_row <6:
+                reward+= LOWER_ROWS_REWARD
+            elif highest_row >=6 and highest_row<11:
+                reward+= MIDDLE_ROWS_REWARD
+            elif highest_row >10:
+                
+                reward+= UPPER_ROWS_REWARD
+            self.score+= reward
+            '''
+            if self.score> int(record):
+                reward+= RECORD_REWARD
+                self.score += RECORD_REWARD'''
+        return reward, next_state
 
 class Game:
     def __init__(self):
