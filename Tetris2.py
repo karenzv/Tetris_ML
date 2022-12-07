@@ -67,6 +67,13 @@ class Agent():
         por lo tanto ignoraremos el eje x, y nuestra tabla solo se tratará de dónde estamos
         en el eje y, recompenzando solo basado en altura (también habrá recompenzas por
         eliminación de filas y castigos por perder el juego).
+        
+        Leyendo el paper de las referencias observamos que la solución que sus autores
+        utilizaron consistía en asignar a sus estados: Posibles ubicaciones para la pieza actual,
+        huecos en el tablero actual y altura máxima de cada columna, sabemos que con toda esa
+        información sería posible crear una inteligencia bastante superior, sin embargo, como
+        estamos intentando aprender poco a poco, solo utilizamos una de esas de momento (además,
+        esa se nos ocurrió antes de leer el paper).
         '''
         #qtable as tensor [height0[L,R,Rotate], height1[L,R,Rotate], ..., height19[L,R,Rotate]]
         self.qtable = []
