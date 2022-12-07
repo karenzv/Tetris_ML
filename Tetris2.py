@@ -2,8 +2,9 @@ import pygame
 import enum
 import sys
 import torch
+import random
 from copy import deepcopy
-from random import choice, randrange, random
+from random import choice, randrange
 from QNN import QLearningNeuralNetwork
 '''
 Authors: Karen Zamora, Josef Ruzicka
@@ -25,11 +26,12 @@ RES = 750, 940
 FPS = 60
 
 # Rewards
-RECORD_REWARD = 100
+# RECORD_REWARD = 100
 LINE_REWARD = 50
 LOWER_ROWS_REWARD = 10
 MIDDLE_ROWS_REWARD = 0
 UPPER_ROWS_REWARD = -10
+GAME_OVER_REWARD = -50
 
 # Learning parameters
 DEFAULT_ALPHA_LR = 0.03 # learning rate
@@ -38,7 +40,7 @@ DEFAULT_EPS_GREEDY  = 1
 DEFAULT_ETA_DECAY  = 0.001
 
 RANDOM_SEED = 2
-EPOCHS = 3
+EPOCHS = 5
 
 class Action(enum.IntEnum):
     LEFT = 0
@@ -90,13 +92,18 @@ class Agent():
     # Performs a complete simulation by the agent
     def simulation(self, env):
         env.reset()
-        while (not env.is_terminal_state()):
-            self.step(env, learn=True)
-        self.eps_greedy -= self.eps_greedy * self.decay 
+        epoch = 0
+        #while epoch < EPOCHS:
+        while True:   
+            while (not env.is_game_over()):
+                self.step(env, learn=True)
+            self.eps_greedy -= self.eps_greedy * self.decay 
+            epoch += 1
         pass
     
     # Performs a single step of the simulation by the agent, if learn=False no updates are performed
     def step(self, env, learn=True):
+        max_height  = 0
         #print(self.eps_greedy)
         #Exploration mode
         r_mode = self.prng.random()
@@ -221,7 +228,7 @@ class Tetris:
                 [(0, 0), (0, -1), (0, 1), (-1, 0)]]
     figures = [[pygame.Rect(x + W // 2, y + 1, 1, 1) for x, y in fig_pos] for fig_pos in figures_pos]
     figure_rect = pygame.Rect(0, 0, TILE - 2, TILE - 2)
-    anim_count, anim_speed, anim_limit = 0, 60, 2000
+    anim_count, anim_speed, anim_limit = 0, 300, 2000
     
 
     get_color = lambda : (randrange(30, 256), randrange(30, 256), randrange(30, 256))
@@ -364,7 +371,7 @@ class Tetris:
                     
     def reset(self):
         self.board = [[0 for i in range(W)] for i in range(H)]
-        self.anim_count, self.anim_speed, self.anim_limit = 0, 60, 2000
+        self.anim_count, self.anim_speed, self.anim_limit = 0, 300, 2000
         self.score = 0
 
     def perform_action(self,action):
@@ -452,6 +459,9 @@ class Tetris:
                 
                 reward+= UPPER_ROWS_REWARD
             self.score+= reward
+            
+        if (self.is_game_over()):
+            reward += GAME_OVER_REWARD
             '''
             if self.score> int(record):
                 reward+= RECORD_REWARD
@@ -468,8 +478,9 @@ class Game:
         self.greedy = 0.25
         self.decay = 1e-7
         self.tetris = Tetris()
-        self.agent = Agent(self.memory_capacity,self.batch_size,self.iters,self.lr,self.discount,self.greedy,self.decay)
-
+        #self.agent = Agent(self.memory_capacity,self.batch_size,self.iters,self.lr,self.discount,self.greedy,self.decay)
+        self.agent = Agent(RANDOM_SEED,0, [a.value for a in Action], DEFAULT_ALPHA_LR, DEFAULT_GAMMA_DISCOUNT, DEFAULT_EPS_GREEDY,DEFAULT_ETA_DECAY)
+        
     def play(self):
         self.agent.simulation(self.tetris)
         

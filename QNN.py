@@ -28,6 +28,6 @@ class QLearningNeuralNetwork(nn.Module):
         file_name = os.path.join(model_folder_path, file_name)
         torch.save(self.state_dict(), file_name)
 
-nn = QLearningNeuralNetwork()
-opt = optim.Adam(nn.parameters(), lr=1e-3)
-loss_fn = nn.CrossEntropyLoss()
+#nn = QLearningNeuralNetwork()
+#opt = optim.Adam(nn.parameters(), lr=1e-3)
+#loss_fn = nn.CrossEntropyLoss()
