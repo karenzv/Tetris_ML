@@ -372,12 +372,6 @@ class Tetris:
                 self.set_record(self.record, self.score)
                 self.reset()
                 game_over= True
-                for i_rect in self.grid:
-                    # TODO: stop this from redrawing
-                    pygame.draw.rect(self.game_screen, (181,59,183), i_rect)
-                    self.screen.blit(self.game_screen, (20, 20))
-                    pygame.display.flip()
-                    self.clock.tick(200)
         return game_over
                     
     def reset(self):
