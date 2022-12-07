@@ -15,6 +15,7 @@ Useful References (Some ideas where adapted from a couple of these):
     https://medium.com/analytics-vidhya/introduction-to-reinforcement-learning-q-learning-by-maze-solving-example-c34039019317
     https://www.youtube.com/watch?v=PJl4iabBEz0
     https://www.youtube.com/watch?v=z4OomBu6kD0
+    https://www.youtube.com/watch?v=7kGNs5R-AM8&t=300s
 '''
 
 
@@ -36,11 +37,11 @@ a una altura mayor a un dos tercios del mapa. Siempre se supo que se asignarían
 por completar lineas o perder el juego.
 '''
 # RECORD_REWARD = 100
-LINE_REWARD = 50
+LINE_REWARD = 200
 LOWER_ROWS_REWARD = 10
 MIDDLE_ROWS_REWARD = 0
 UPPER_ROWS_REWARD = -10
-GAME_OVER_REWARD = -50
+GAME_OVER_REWARD = -200
 
 # Learning parameters
 DEFAULT_ALPHA_LR = 0.03 # learning rate
