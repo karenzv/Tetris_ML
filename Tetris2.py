@@ -15,7 +15,7 @@ Useful References (Some ideas where adapted from a couple of these):
     https://medium.com/analytics-vidhya/introduction-to-reinforcement-learning-q-learning-by-maze-solving-example-c34039019317
     https://www.youtube.com/watch?v=PJl4iabBEz0
     https://www.youtube.com/watch?v=z4OomBu6kD0
-    https://www.youtube.com/watch?v=7kGNs5R-AM8&t=300s
+    https://www.youtube.com/watch?v=7kGNs5R-AM8&t=300s #Tetris partially adapted from here.
 '''
 
 
@@ -164,6 +164,7 @@ class Agent():
 '''
 # Attempt at solving the problem using Deep Q Learning.
 # There was some confusion towards connecting the NN to the agent and the game.
+
 class Deep_Q_Learning_Agent():
     def __init__(self,memory_capacity, batch_size, iters, learning_rate, discount, eps_greedy, decay):
         #random.seed(RANDOM_SEED)
@@ -238,7 +239,7 @@ class Tetris:
                 [(0, 0), (0, -1), (0, 1), (-1, 0)]]
     figures = [[pygame.Rect(x + W // 2, y + 1, 1, 1) for x, y in fig_pos] for fig_pos in figures_pos]
     figure_rect = pygame.Rect(0, 0, TILE - 2, TILE - 2)
-    anim_count, anim_speed, anim_limit = 0, 400, 2000
+    animsations_per_frame, animsation_speed, animsations_limit = 0, 400, 2000
     
 
     get_color = lambda : (randrange(30, 256), randrange(30, 256), randrange(30, 256))
@@ -300,9 +301,9 @@ class Tetris:
 
     def move_vertically(self):
         self.figure_land = False
-        self.anim_count += self.anim_speed
-        if self.anim_count > self.anim_limit:
-            self.anim_count = 0
+        self.animsations_per_frame += self.animsation_speed
+        if self.animsations_per_frame > self.animsations_limit:
+            self.animsations_per_frame = 0
             figure_old = deepcopy(self.figure)
             for i in range(4):
                 self.figure[i].y += 1
@@ -312,7 +313,7 @@ class Tetris:
                     self.figure, self.color = self.next_figure, self.next_color
                     self.figure_land = True
                     self.next_figure, self.next_color = deepcopy(choice(self.figures)), self.get_color()
-                    self.anim_limit = 2000
+                    self.animsations_limit = 2000
                     break
 
     def rotate(self,rotate):
@@ -339,7 +340,7 @@ class Tetris:
             if count < W:
                 line -= 1
             else:
-                self.anim_speed += 3
+                self.animsation_speed += 3
                 lines += 1
         return lines
 
@@ -381,7 +382,7 @@ class Tetris:
                     
     def reset(self):
         self.board = [[0 for i in range(W)] for i in range(H)]
-        self.anim_count, self.anim_speed, self.anim_limit = 0, 400, 2000
+        self.animsations_per_frame, self.animsation_speed, self.animsations_limit = 0, 400, 2000
         self.score = 0
 
     def perform_action(self,action):
@@ -408,7 +409,7 @@ class Tetris:
                 elif event.key == pygame.K_RIGHT:
                     dx = 1
                 elif event.key == pygame.K_DOWN:
-                    self.anim_limit = 100
+                    self.animsations_limit = 100
                 elif event.key == pygame.K_UP:
                     rotate = True'''
 
@@ -419,7 +420,7 @@ class Tetris:
         elif action ==2:
             rotate = True
         elif action == 3:
-            self.anim_limit = 100
+            self.animsations_limit = 100
         #self.move_horizontally(dx)
         self.move_horizontally(dx)
 
